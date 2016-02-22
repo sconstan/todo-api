@@ -22,9 +22,6 @@ app.get('/todos', function(req, res) {
 
 	var where = {};
 
-
-console.log(query);
-
 	if (query.hasOwnProperty('completed') && query.completed === 'true') {
 		where.completed = true;
 	} else if (query.hasOwnProperty('completed') && query.completed === 'false') {
@@ -103,17 +100,12 @@ app.post('/todos', function(req, res) {
 	// if ((!_.isBoolean(body.completed)) || (!_.isString(body.description)) || (body.description.trim().length === 0)) {
 	// 	return res.status(400).send();
 	// }
-
 	// body.description = body.description.trim();
-
 	// //	add id field to body
 	// body.id = todoNextId++;
-
 	// //	add the Todo to the array...
 	// todos.push(body);
-
 	// res.json(body);
-
 });
 
 
@@ -121,16 +113,34 @@ app.post('/todos', function(req, res) {
 app.delete('/todos/:id', function(req, res) {
 
 	var todoid = parseInt(req.params.id, 10);
-	var foundit = _.findWhere(todos, {
-		id: todoid
-	});
 
-	todos = _.without(todos, foundit);
-	if (foundit) {
-		res.json('Deleted todo item: ' + foundit.id + ' with description ' + foundit.description);
-	} else {
-		res.json('Item not found');
-	}
+
+	db.todo.destroy({
+		where: {
+			id: todoid
+		}
+	}).then(function (rowsDeleted) {
+		if (rowsDeleted === 0) {
+			res.status(404).json({
+				error: 'No todo with id'
+			});
+		} else {
+			res.status(204).send();
+		}
+	}, function () {
+		res.status(500).send();
+	});
+	
+	// var foundit = _.findWhere(todos, {
+	// 	id: todoid
+	// });
+
+	// todos = _.without(todos, foundit);
+	// if (foundit) {
+	// 	res.json('Deleted todo item: ' + foundit.id + ' with description ' + foundit.description);
+	// } else {
+	// 	res.json('Item not found');
+	// }
 
 });
 
@@ -166,6 +176,7 @@ app.put('/todos/:id', function(req, res) {
 
 });
 
+// synchronize the DB
 db.sequelize.sync().then(function () {
 	app.listen(PORT, function() {
 		console.log('Express listening on port: ' + PORT + '!');
