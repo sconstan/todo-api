@@ -88,17 +88,20 @@ app.get('/todos/:id', middleware.requireAuthentication, function(req, res) {
 	// }
 });
 
-// POST /todos
+// POST /todos - create a new Todo
 app.post('/todos', middleware.requireAuthentication, function(req, res) {
 
 	var body = _.pick(req.body, 'description', 'completed');
 
 	db.todo.create(body).then(function (todo) {
-		res.json(todo.toJSON());
-
+		// 
+		req.user.addTodo(todo).then(function () {
+			return todo.reload();
+		}).then(function (todo) {
+			res.json(todo.toJSON());
+		});
 	}, function (e) {
 		res.status(400).json(e);
-
 	});
 
 	// if ((!_.isBoolean(body.completed)) || (!_.isString(body.description)) || (body.description.trim().length === 0)) {
@@ -228,7 +231,9 @@ app.post('/users/login', function(req,res) {
 
 
 // synchronize the DB
-db.sequelize.sync().then(function () {
+db.sequelize.sync({
+	force: true
+}).then(function () {
 	app.listen(PORT, function() {
 		console.log('Express listening on port: ' + PORT + '!');
 	});
