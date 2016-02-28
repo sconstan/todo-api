@@ -128,7 +128,6 @@ app.delete('/todos/:id', middleware.requireAuthentication, function(req, res) {
 
 	var todoid = parseInt(req.params.id, 10);
 
-
 	db.todo.destroy({
 		where: {
 			id: todoid,
@@ -142,7 +141,7 @@ app.delete('/todos/:id', middleware.requireAuthentication, function(req, res) {
 		} else {
 			res.status(204).send();
 		}
-	}, function () {
+	}, function (e) {
 		res.status(500).send();
 	});
 	
@@ -196,7 +195,7 @@ app.put('/todos/:id', middleware.requireAuthentication, function(req, res) {
 		} else {
 			res.status(404).send();
 		}
-	}, function () {
+	}, function (e) {
 		res.status(500).send();
 	})
 
@@ -240,7 +239,7 @@ app.post('/users/login', function(req,res) {
 
 // synchronize the DB
 db.sequelize.sync({
-	force: true
+	// force: true
 }).then(function () {
 	app.listen(PORT, function() {
 		console.log('Express listening on port: ' + PORT + '!');
