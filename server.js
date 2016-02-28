@@ -1,12 +1,13 @@
 var express = require('express');
 var bodyParser = require('body-parser');
 var _ = require('underscore');
-var db = require('./db.js');
+var bcrypt = require('bcrypt');
 
+var postmark = require('postmark');
+
+var db = require('./db.js');
 var middleware = require('./middleware.js')(db);
 
-
-var bcrypt = require('bcrypt');
 
 var app = express();
 var PORT = process.env.PORT || 3000;
@@ -196,11 +197,21 @@ app.post('/users', function (req,res) {
 
 	db.user.create(body).then (function(user) {
 		res.json(user.toPublicJSON());
+
+		// send a user signup email using POSTMARK!
+		var client = new postmark.Client('ecde3710-e8a6-4e7b-9f47-30494ffd2993');
+
+		client.sendEmail({
+			"From": "todoapp@savvaskonstantinidis.gr",
+			"To" : body.email,
+			"Subject" : "Welcome to the Todo App",
+			"TextBody" : "Welcome to the Todo App!" 
+		});
+
 	}, function (e) {
 		res.status(400).json(e);
 	});
 });
-
 
 
 // POST /users/login
@@ -240,7 +251,7 @@ app.delete('/users/login', middleware.requireAuthentication, function (req,res) 
 
 // synchronize the DB
 db.sequelize.sync({
-	force: true
+	//force: true
 }).then(function () {
 	app.listen(PORT, function() {
 		console.log('Express listening on port: ' + PORT + '!');
